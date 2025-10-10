@@ -1,12 +1,12 @@
 {
   "name": "10x-healthy-meal",
   "version": "0.0.1",
-  "description": "Warmup repository for 10xDevs.pl program.",
+  "description": "Healthy meal application done for 10xDevs.pl program.",
   "main": "index.js",
   "scripts": {
     "test": "vitest"
   },
-  "author": "Przeprogramowani",
+  "author": "Piotr Sekuła",
   "license": "ISC",
   "devDependencies": {
     "@types/node": "22.13.11",
