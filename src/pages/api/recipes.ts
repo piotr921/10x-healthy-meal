@@ -8,7 +8,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
   try {
     // Get authenticated user from Supabase
     const { data: { user }, error: authError } = await locals.supabase.auth.getUser();
-    
+
     if (authError || !user) {
       const errorResponse: ErrorResponseDTO = {
         error: {
@@ -24,41 +24,12 @@ export const POST: APIRoute = async ({ request, locals }) => {
     }
 
     // Parse and validate request body
-    let requestBody: unknown;
-    try {
-      requestBody = await request.json();
-    } catch (parseError) {
-      const errorResponse: ErrorResponseDTO = {
-        error: {
-          message: 'Invalid JSON in request body',
-          code: 'INVALID_JSON'
-        },
-        timestamp: new Date().toISOString()
-      };
-      return new Response(JSON.stringify(errorResponse), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    // Validate request body against schema
-    const validationResult = CreateRecipeCommandSchema.safeParse(requestBody);
+    const validationResult = await parseAndValidateRequestBody(request);
     if (!validationResult.success) {
-      const errorResponse: ErrorResponseDTO = {
-        error: {
-          message: 'Validation failed',
-          code: 'VALIDATION_ERROR',
-          details: formatValidationErrors(validationResult.error)
-        },
-        timestamp: new Date().toISOString()
-      };
-      return new Response(JSON.stringify(errorResponse), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return validationResult.errorResponse!;
     }
 
-    const command: CreateRecipeCommand = validationResult.data;
+    const command: CreateRecipeCommand = validationResult.data!;
 
     // Create a recipe using service
     const recipeService = new RecipeService(locals.supabase);
@@ -122,3 +93,60 @@ export const POST: APIRoute = async ({ request, locals }) => {
     });
   }
 };
+
+/**
+ * Parses and validates the request body for recipe creation
+ * @param request - The incoming request object
+ * @returns Promise with a validation result containing either the validated command or error response
+ */
+async function parseAndValidateRequestBody(request: Request): Promise<{
+    success: boolean;
+    data?: CreateRecipeCommand;
+    errorResponse?: Response;
+}> {
+    // Parse and validate request body
+    let requestBody: unknown;
+    try {
+        requestBody = await request.json();
+    } catch (parseError) {
+        const errorResponse: ErrorResponseDTO = {
+            error: {
+                message: 'Invalid JSON in request body',
+                code: 'INVALID_JSON'
+            },
+            timestamp: new Date().toISOString()
+        };
+        return {
+            success: false,
+            errorResponse: new Response(JSON.stringify(errorResponse), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            })
+        };
+    }
+
+    // Validate request body against schema
+    const validationResult = CreateRecipeCommandSchema.safeParse(requestBody);
+    if (!validationResult.success) {
+        const errorResponse: ErrorResponseDTO = {
+            error: {
+                message: 'Validation failed',
+                code: 'VALIDATION_ERROR',
+                details: formatValidationErrors(validationResult.error)
+            },
+            timestamp: new Date().toISOString()
+        };
+        return {
+            success: false,
+            errorResponse: new Response(JSON.stringify(errorResponse), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            })
+        };
+    }
+
+    return {
+        success: true,
+        data: validationResult.data
+    };
+}
