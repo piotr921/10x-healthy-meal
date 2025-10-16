@@ -1,8 +1,8 @@
 import type { APIRoute } from 'astro';
-import { DietaryPreferencesService } from '../../lib/services/dietary-preferences.service';
-import { createDietaryPreferencesSchema } from '../../lib/validation/dietary-preferences.validation';
-import { DEFAULT_USER_ID } from '../../db/supabase.client';
-import type { ErrorResponseDTO } from '../../types';
+import { DietaryPreferencesService } from '@/lib/services/dietary-preferences.service';
+import { createDietaryPreferencesSchema } from '@/lib/validation/dietary-preferences.validation';
+import { DEFAULT_USER_ID } from '@/db/supabase.client';
+import type { ErrorResponseDTO } from '@/types';
 
 export const prerender = false;
 

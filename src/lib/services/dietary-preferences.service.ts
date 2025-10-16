@@ -1,10 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
   CreateDietaryPreferencesCommand,
-  DietaryPreferencesDTO,
-  DietaryPreferencesInsert,
-  ForbiddenIngredientsInsert
-} from '../../types';
+  DietaryPreferencesDTO
+} from '@/types';
 
 export class DietaryPreferencesService {
   constructor(private readonly supabase: SupabaseClient) {}

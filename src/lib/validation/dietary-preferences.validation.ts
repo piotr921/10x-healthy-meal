@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { CreateDietaryPreferencesCommand, DietType } from '../../types';
+import type { CreateDietaryPreferencesCommand } from '@/types';
 
 const dietTypeEnum = z.enum(['vegan', 'vegetarian', 'none'] as const);
 
@@ -18,8 +18,3 @@ export const createDietaryPreferencesSchema = z.object({
       ingredients.map(i => i.toLowerCase())
     )
 }) satisfies z.ZodType<CreateDietaryPreferencesCommand>;
-
-// Type guard for runtime type checking
-export const isDietType = (value: unknown): value is DietType => {
-  return dietTypeEnum.safeParse(value).success;
-};
