@@ -214,11 +214,6 @@ This endpoint creates dietary preferences for the currently authenticated user. 
 - Implement proper rollback mechanisms
 - Handle concurrent request scenarios
 
-### Scalability:
-- Design for horizontal scaling
-- Consider database connection pooling
-- Plan for increased user load
-
 ### Maintenance:
 - Implement comprehensive logging
 - Add health check endpoints
