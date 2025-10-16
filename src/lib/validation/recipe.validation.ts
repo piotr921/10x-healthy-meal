@@ -18,6 +18,34 @@ export const CreateRecipeCommandSchema = z.object({
 });
 
 /**
+ * Validation schema for recipe list query parameters
+ * Used in GET /api/recipes
+ */
+export const RecipeListQueryParamsSchema = z.object({
+  page: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseInt(val, 10) : 1))
+    .refine((val) => val >= 1, 'Page must be a positive integer'),
+  limit: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseInt(val, 10) : 20))
+    .refine(
+      (val) => val >= 1 && val <= 100,
+      'Limit must be between 1 and 100'
+    ),
+  search: z
+    .string()
+    .optional()
+    .transform((val) => val?.trim() || undefined)
+    .refine(
+      (val) => !val || val.length <= 200,
+      'Search term must be 200 characters or less'
+    ),
+});
+
+/**
  * Helper function to format Zod validation errors for API responses
  */
 export function formatValidationErrors(error: z.ZodError) {

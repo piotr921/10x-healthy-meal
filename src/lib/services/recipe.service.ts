@@ -3,7 +3,10 @@ import type {
   CreateRecipeCommand,
   RecipeInsert,
   RecipeEntity,
-  RecipeDTO
+  RecipeDTO,
+  RecipeListResponseDTO,
+  RecipeListQueryParams,
+  PaginationMetadata
 } from '../../types';
 
 export class RecipeService {
@@ -78,6 +81,64 @@ export class RecipeService {
     if (existingRecipe) {
       throw new Error('DUPLICATE_TITLE');
     }
+  }
+
+  /**
+   * Retrieves a paginated list of recipes for the specified user
+   * @param queryParams - Query parameters for pagination and search
+   * @param userId - The ID of the user
+   * @returns Promise<RecipeListResponseDTO> - Paginated list of recipes with metadata
+   * @throws Error if database operation fails
+   */
+  async getUserRecipes(queryParams: RecipeListQueryParams, userId: string): Promise<RecipeListResponseDTO> {
+    const { page = 1, limit = 20, search } = queryParams;
+    const offset = (page - 1) * limit;
+
+    // Build the base query
+    let query = this.supabase
+      .from('recipes')
+      .select('*', { count: 'exact' })
+      .eq('user_id', userId)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false });
+
+    // Add a search filter if provided
+    if (search) {
+      query = query.ilike('title', `%${search}%`);
+    }
+
+    // Apply pagination
+    query = query.range(offset, offset + limit - 1);
+
+    // Execute the query
+    const { data: recipes, error, count } = await query;
+
+    if (error) {
+      throw new Error(`Failed to fetch recipes: ${error.message}`);
+    }
+
+    if (!recipes) {
+      throw new Error('Recipe fetch failed - no data returned');
+    }
+
+    // Calculate pagination metadata
+    const totalCount = count || 0;
+    const totalPages = Math.ceil(totalCount / limit);
+
+    const pagination: PaginationMetadata = {
+      current_page: page,
+      total_pages: totalPages,
+      total_count: totalCount,
+      limit: limit
+    };
+
+    // Transform recipes to DTO format
+    const recipeDTOs = recipes.map(recipe => this.transformToDTO(recipe));
+
+    return {
+      recipes: recipeDTOs,
+      pagination
+    };
   }
 
   /**
