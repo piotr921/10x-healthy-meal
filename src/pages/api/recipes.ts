@@ -2,27 +2,13 @@ import type { APIRoute } from 'astro';
 
 import { RecipeService } from '../../lib/services/recipe.service';
 import { CreateRecipeCommandSchema, formatValidationErrors } from '../../lib/validation/recipe.validation';
+import { DEFAULT_USER_ID } from '../../db/supabase.client';
 import type { CreateRecipeCommand, ErrorResponseDTO, RecipeDTO } from '../../types';
+
+export const prerender = false;
 
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
-    // Get authenticated user from Supabase
-    const { data: { user }, error: authError } = await locals.supabase.auth.getUser();
-
-    if (authError || !user) {
-      const errorResponse: ErrorResponseDTO = {
-        error: {
-          message: 'Authentication required',
-          code: 'UNAUTHORIZED'
-        },
-        timestamp: new Date().toISOString()
-      };
-      return new Response(JSON.stringify(errorResponse), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
     // Parse and validate request body
     const validationResult = await parseAndValidateRequestBody(request);
     if (!validationResult.success) {
@@ -31,12 +17,12 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     const command: CreateRecipeCommand = validationResult.data!;
 
-    // Create a recipe using service
+    // Create a recipe using service with DEFAULT_USER_ID
     const recipeService = new RecipeService(locals.supabase);
     
     try {
-      const newRecipe: RecipeDTO = await recipeService.createRecipe(user.id, command);
-      
+      const newRecipe: RecipeDTO = await recipeService.createRecipe(DEFAULT_USER_ID, command);
+
       return new Response(JSON.stringify(newRecipe), {
         status: 201,
         headers: { 'Content-Type': 'application/json' }
