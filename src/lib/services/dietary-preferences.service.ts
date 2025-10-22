@@ -65,4 +65,39 @@ export class DietaryPreferencesService {
       updated_at: result.updated_at
     };
   }
+
+  async getUserPreferences(userId: string): Promise<DietaryPreferencesDTO | null> {
+    // Fetch the user's preferences with ingredients
+    const { data: result, error: fetchError } = await this.supabase
+      .from('dietary_preferences')
+      .select(`
+        id,
+        diet_type,
+        version,
+        created_at,
+        updated_at,
+        forbidden_ingredients (
+          ingredient_name
+        )
+      `)
+      .eq('user_id', userId)
+      .single();
+
+    if (fetchError) {
+      // If an error is not found, return null
+      if (fetchError.code === 'PGRST116') {
+        return null;
+      }
+      throw new Error(`Failed to fetch dietary preferences: ${fetchError.message}`);
+    }
+
+    return {
+      id: result.id,
+      diet_type: result.diet_type,
+      forbidden_ingredients: result.forbidden_ingredients.map(fi => fi.ingredient_name),
+      version: result.version,
+      created_at: result.created_at,
+      updated_at: result.updated_at
+    };
+  }
 }

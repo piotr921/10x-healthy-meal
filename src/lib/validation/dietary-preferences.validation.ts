@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { CreateDietaryPreferencesCommand } from '@/types';
+import type { CreateDietaryPreferencesCommand, DietaryPreferencesDTO } from '@/types';
 
 const dietTypeEnum = z.enum(['vegan', 'vegetarian', 'none'] as const);
 
@@ -18,3 +18,14 @@ export const createDietaryPreferencesSchema = z.object({
       ingredients.map(i => i.toLowerCase())
     )
 }) satisfies z.ZodType<CreateDietaryPreferencesCommand>;
+
+export const dietaryPreferencesResponseSchema = z.object({
+  id: z.string().uuid('Invalid preference ID format'),
+  diet_type: dietTypeEnum,
+  forbidden_ingredients: z.array(
+    z.string().trim().min(1).max(100)
+  ),
+  version: z.number().int().positive(),
+  created_at: z.string().datetime(),
+  updated_at: z.string().datetime()
+}) satisfies z.ZodType<DietaryPreferencesDTO>;
