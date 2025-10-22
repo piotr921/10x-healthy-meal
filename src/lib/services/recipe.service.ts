@@ -8,11 +8,9 @@ import type {
   RecipeListQueryParams,
   PaginationMetadata
 } from '../../types';
+import { SupabaseConstants } from '../constants/supabase.constants';
 
 export class RecipeService {
-  // Supabase error codes
-  private static readonly SUPABASE_NOT_FOUND_CODE = 'PGRST116';
-  private static readonly POSTGRES_UNIQUE_VIOLATION_CODE = '23505';
 
   constructor(private supabase: SupabaseClient) {}
 
@@ -44,7 +42,7 @@ export class RecipeService {
 
     if (insertError) {
       // Handle unique constraint violation (fallback if duplicate check failed)
-      if (insertError.code === RecipeService.POSTGRES_UNIQUE_VIOLATION_CODE) {
+      if (insertError.code === SupabaseConstants.ERROR_CODES.UNIQUE_VIOLATION) {
         throw new Error('DUPLICATE_TITLE');
       }
       throw new Error(`Failed to create recipe: ${insertError.message}`);
@@ -73,8 +71,8 @@ export class RecipeService {
       .is('deleted_at', null)
       .single();
 
-    if (checkError && checkError.code !== RecipeService.SUPABASE_NOT_FOUND_CODE) {
-      // SUPABASE_NOT_FOUND_CODE is "not found" which is what we want
+    if (checkError && checkError.code !== SupabaseConstants.ERROR_CODES.NOT_FOUND) {
+      // NOT_FOUND is the expected error when no duplicate exists
       throw new Error(`Failed to check for existing recipe: ${checkError.message}`);
     }
 

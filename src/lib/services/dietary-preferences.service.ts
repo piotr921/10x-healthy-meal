@@ -3,6 +3,7 @@ import type {
   CreateDietaryPreferencesCommand,
   DietaryPreferencesDTO
 } from '@/types';
+import { SupabaseConstants } from '../constants/supabase.constants';
 
 export class DietaryPreferencesService {
   constructor(private readonly supabase: SupabaseClient) {}
@@ -85,7 +86,7 @@ export class DietaryPreferencesService {
 
     if (fetchError) {
       // If an error is not found, return null
-      if (fetchError.code === 'PGRST116') {
+      if (fetchError.code === SupabaseConstants.ERROR_CODES.NOT_FOUND) {
         return null;
       }
       throw new Error(`Failed to fetch dietary preferences: ${fetchError.message}`);
