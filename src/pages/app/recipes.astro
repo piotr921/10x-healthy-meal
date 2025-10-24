@@ -1,20 +1,23 @@
 ---
 import AppLayout from "@/layouts/AppLayout.astro";
-import RecipeList from "@/components/my-recipes/RecipeList";
-import SearchBar from "@/components/my-recipes/SearchBar";
+import RecipesView from "@/components/my-recipes/RecipesView";
 import InfoBanner from "@/components/my-recipes/InfoBanner";
-import { Button } from "@/components/ui/button";
 ---
 
 <AppLayout title="My Recipes">
-  <div class="container mx-auto py-8">
-    <div class="flex justify-between items-center mb-6">
+  <div class="container mx-auto py-8 px-4">
+    <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
       <h1 class="text-3xl font-bold">My Recipes</h1>
-      <Button as="a" href="/app/recipes/create">Create Recipe</Button>
+      <a
+        href="/app/recipes/create"
+        class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 transition-colors"
+      >
+        Create Recipe
+      </a>
     </div>
-    <div class="flex flex-col gap-4">
+    <div class="flex flex-col gap-6">
       <InfoBanner client:load />
-      <RecipeList client:load />
+      <RecipesView client:load />
     </div>
   </div>
 </AppLayout>
