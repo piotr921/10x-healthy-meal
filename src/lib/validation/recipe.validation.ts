@@ -18,6 +18,24 @@ export const CreateRecipeCommandSchema = z.object({
 });
 
 /**
+ * Validation schema for UpdateRecipeCommand
+ * Validates title (1-200 characters) and content (1-10,000 characters)
+ * Uses the same validation rules as CreateRecipeCommandSchema
+ */
+export const UpdateRecipeCommandSchema = z.object({
+  title: z
+    .string()
+    .min(1, 'Title is required and cannot be empty')
+    .max(200, 'Title must be 200 characters or less')
+    .trim(),
+  content: z
+    .string()
+    .min(1, 'Content is required and cannot be empty')
+    .max(10000, 'Content must be 10,000 characters or less')
+    .trim(),
+});
+
+/**
  * Validation schema for recipe list query parameters
  * Used in GET /api/recipes
  */

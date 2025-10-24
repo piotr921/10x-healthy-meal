@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '../../db/supabase.client';
 import type {
   CreateRecipeCommand,
+  UpdateRecipeCommand,
   RecipeInsert,
   RecipeEntity,
   RecipeDTO,
@@ -60,16 +61,23 @@ export class RecipeService {
    * Checks if a recipe with the same title already exists for the user
    * @param userId - The ID of the user
    * @param title - The title to check for duplicates
+   * @param excludeId - Optional recipe ID to exclude from the duplicate check (used when updating)
    * @throws Error if duplicate title exists or database operation fails
    */
-  private async checkForDuplicateTitle(userId: string, title: string): Promise<void> {
-    const { data: existingRecipe, error: checkError } = await this.supabase
+  private async checkForDuplicateTitle(userId: string, title: string, excludeId?: string): Promise<void> {
+    let query = this.supabase
       .from('recipes')
       .select('id')
       .eq('user_id', userId)
       .eq('title', title)
-      .is('deleted_at', null)
-      .single();
+      .is('deleted_at', null);
+
+    // Exclude the current recipe when checking for duplicates during update
+    if (excludeId) {
+      query = query.neq('id', excludeId);
+    }
+
+    const { data: existingRecipe, error: checkError } = await query.single();
 
     if (checkError && checkError.code !== SupabaseConstants.ERROR_CODES.NOT_FOUND) {
       // NOT_FOUND is the expected error when no duplicate exists
@@ -169,6 +177,55 @@ export class RecipeService {
 
     // Transform to DTO format
     return this.transformToDTO(recipe);
+  }
+
+  /**
+   * Updates an existing recipe for the specified user
+   * @param userId - The ID of the user updating the recipe
+   * @param recipeId - The ID of the recipe to update
+   * @param command - The recipe update command containing title and content
+   * @returns Promise<RecipeDTO> - The updated recipe data
+   * @throws Error if recipe not found, duplicate title exists, or database operation fails
+   */
+  async updateRecipe(userId: string, recipeId: string, command: UpdateRecipeCommand): Promise<RecipeDTO> {
+    // Guard clause: Verify recipe exists and belongs to user
+    const existingRecipe = await this.getRecipeById(userId, recipeId);
+    if (!existingRecipe) {
+      throw new Error('NOT_FOUND');
+    }
+
+    // Guard clause: Check for duplicate title (excluding current recipe)
+    await this.checkForDuplicateTitle(userId, command.title, recipeId);
+
+    // Update the recipe with new data and increment update_counter
+    const { data: updatedRecipe, error: updateError } = await this.supabase
+      .from('recipes')
+      .update({
+        title: command.title,
+        content: command.content,
+        update_counter: existingRecipe.update_counter + 1,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', recipeId)
+      .eq('user_id', userId)
+      .is('deleted_at', null)
+      .select()
+      .single();
+
+    if (updateError) {
+      // Handle unique constraint violation (fallback if duplicate check failed)
+      if (updateError.code === SupabaseConstants.ERROR_CODES.UNIQUE_VIOLATION) {
+        throw new Error('DUPLICATE_TITLE');
+      }
+      throw new Error(`Failed to update recipe: ${updateError.message}`);
+    }
+
+    if (!updatedRecipe) {
+      throw new Error('Recipe update failed - no data returned');
+    }
+
+    // Transform to DTO format (exclude user_id and deleted_at)
+    return this.transformToDTO(updatedRecipe);
   }
 
   /**

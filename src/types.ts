@@ -72,7 +72,10 @@ export type CreateRecipeCommand = Pick<RecipeInsert, 'title' | 'content'>;
  * Command for updating an existing recipe
  * Used in PUT /api/recipes/{id}
  */
-export type UpdateRecipeCommand = Pick<RecipeUpdate, 'title' | 'content'>;
+export interface UpdateRecipeCommand {
+  title: string;
+  content: string;
+}
 
 /**
  * Pagination metadata for recipe list responses
