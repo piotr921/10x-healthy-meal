@@ -140,6 +140,38 @@ export class RecipeService {
   }
 
   /**
+   * Retrieves a single recipe by ID for the specified user
+   * @param userId - The ID of the user
+   * @param recipeId - The ID of the recipe to retrieve
+   * @returns Promise<RecipeDTO | null> - The recipe data or null if not found
+   * @throws Error if database operation fails
+   */
+  async getRecipeById(userId: string, recipeId: string): Promise<RecipeDTO | null> {
+    const { data: recipe, error } = await this.supabase
+      .from('recipes')
+      .select('*')
+      .eq('id', recipeId)
+      .eq('user_id', userId)
+      .is('deleted_at', null)
+      .single();
+
+    // Handle not found case (PGRST116 is Supabase's "not found" error code)
+    if (error) {
+      if (error.code === SupabaseConstants.ERROR_CODES.NOT_FOUND) {
+        return null;
+      }
+      throw new Error(`Failed to fetch recipe: ${error.message}`);
+    }
+
+    if (!recipe) {
+      return null;
+    }
+
+    // Transform to DTO format
+    return this.transformToDTO(recipe);
+  }
+
+  /**
    * Transforms a RecipeEntity to RecipeDTO format
    * @param recipe - The recipe entity from database
    * @returns RecipeDTO - The transformed recipe data
