@@ -230,3 +230,101 @@ export interface SuccessResponseDTO {
   message: string;
   timestamp?: string;
 }
+
+// =============================================================================
+// Recipe Detail View Types
+// =============================================================================
+
+/**
+ * Main view state model for Recipe Detail View
+ */
+export interface RecipeDetailViewModel {
+  recipe: RecipeDTO | null;      // Recipe data, null during loading or on error
+  isLoading: boolean;            // True during initial fetch
+  error: string | null;          // Error message if fetch failed
+}
+
+/**
+ * Props for RecipeDetailView component
+ */
+export interface RecipeDetailViewProps {
+  recipeId: string;              // UUID of recipe to display
+}
+
+/**
+ * Props for RecipeDetailContent component
+ */
+export interface RecipeDetailContentProps {
+  recipe: RecipeDTO;             // Recipe data to display
+  onEdit: () => void;            // Callback for edit action
+  onDelete: () => void;          // Callback for delete action
+  onAnalyze: () => void;         // Callback for AI analyze action
+}
+
+/**
+ * Props for RecipeHeader component
+ */
+export interface RecipeHeaderProps {
+  title: string;                 // Recipe title
+  createdAt: string;             // ISO8601 creation timestamp
+  updatedAt: string;             // ISO8601 update timestamp
+  updateCounter: number;         // Number of updates
+}
+
+/**
+ * Props for RecipeMetadata component
+ */
+export interface RecipeMetadataProps {
+  createdAt: string;             // ISO8601 creation timestamp
+  updatedAt: string;             // ISO8601 update timestamp
+  updateCounter: number;         // Number of updates
+}
+
+/**
+ * Props for RecipeContent component
+ */
+export interface RecipeContentProps {
+  content: string;               // Full recipe text content
+}
+
+/**
+ * Props for RecipeActions component
+ */
+export interface RecipeActionsProps {
+  onEdit: () => void;            // Callback for edit button
+  onAnalyze: () => void;         // Callback for analyze button
+  onDelete: () => void;          // Callback for delete button
+}
+
+/**
+ * Props for ConfirmDeleteModal component
+ */
+export interface ConfirmDeleteModalProps {
+  isOpen: boolean;               // Modal visibility state
+  recipeTitle: string;           // Recipe title for confirmation message
+  isDeleting: boolean;           // Loading state during deletion
+  onConfirm: () => Promise<void>; // Async delete confirmation handler
+  onCancel: () => void;          // Cancel/close handler
+}
+
+/**
+ * Props for ErrorState component
+ */
+export interface ErrorStateProps {
+  error: string;                 // Error message to display
+  statusCode?: number;           // Optional HTTP status code
+  onRetry?: () => void;          // Optional retry callback
+}
+
+/**
+ * Return type for useRecipeDetail custom hook
+ */
+export interface UseRecipeDetailReturn {
+  recipe: RecipeDTO | null;      // Fetched recipe data
+  isLoading: boolean;            // Loading state
+  error: string | null;          // Error message
+  deleteRecipe: () => Promise<void>; // Delete function
+  isDeleting: boolean;           // Deleting state
+  refetch: () => Promise<void>;  // Refetch function for retry
+}
+

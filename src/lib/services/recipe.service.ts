@@ -229,6 +229,35 @@ export class RecipeService {
   }
 
   /**
+   * Soft deletes a recipe by setting the deleted_at timestamp
+   * @param userId - The ID of the user deleting the recipe
+   * @param recipeId - The ID of the recipe to delete
+   * @returns Promise<void>
+   * @throws Error if recipe not found or database operation fails
+   */
+  async deleteRecipe(userId: string, recipeId: string): Promise<void> {
+    // Guard clause: Verify recipe exists and belongs to user
+    const existingRecipe = await this.getRecipeById(userId, recipeId);
+    if (!existingRecipe) {
+      throw new Error('NOT_FOUND');
+    }
+
+    // Soft delete the recipe by setting deleted_at timestamp
+    const { error: deleteError } = await this.supabase
+      .from('recipes')
+      .update({
+        deleted_at: new Date().toISOString(),
+      })
+      .eq('id', recipeId)
+      .eq('user_id', userId)
+      .is('deleted_at', null);
+
+    if (deleteError) {
+      throw new Error(`Failed to delete recipe: ${deleteError.message}`);
+    }
+  }
+
+  /**
    * Transforms a RecipeEntity to RecipeDTO format
    * @param recipe - The recipe entity from database
    * @returns RecipeDTO - The transformed recipe data

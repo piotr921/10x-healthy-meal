@@ -199,3 +199,45 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
     return createErrorResponse('Internal server error', 500);
   }
 };
+
+/**
+ * DELETE /api/recipes/{id}
+ * Soft deletes an existing recipe for the authenticated user
+ *
+ * @param params.id - The UUID of the recipe to delete
+ * @returns 204 No Content on success
+ * @returns 400 if recipe ID is invalid
+ * @returns 404 if recipe not found or belongs to another user
+ * @returns 500 on server errors
+ */
+export const DELETE: APIRoute = async ({ params, locals }) => {
+  try {
+    // Guard clause: Validate Supabase client availability
+    const supabaseError = validateSupabaseClient(locals);
+    if (supabaseError) return supabaseError;
+
+    // Guard clause: Validate recipe ID and UUID format
+    const validation = validateRecipeId(params);
+    if ('error' in validation) return validation.error;
+    const { recipeId } = validation;
+
+    // Delete recipe using RecipeService
+    const recipeService = new RecipeService(locals.supabase);
+    await recipeService.deleteRecipe(DEFAULT_USER_ID, recipeId);
+
+    // Happy path: Return 204 No Content
+    return new Response(null, { status: 204 });
+
+  } catch (error) {
+    // Handle service-specific errors
+    if (error instanceof Error && error.message === 'NOT_FOUND') {
+      console.error(`Recipe not found for deletion - recipeId: ${params.id}, userId: ${DEFAULT_USER_ID}`);
+      return createErrorResponse('Recipe not found', 404, 'NOT_FOUND');
+    }
+
+    // Handle unexpected errors
+    console.error('Error deleting recipe:', error);
+    return createErrorResponse('Internal server error', 500);
+  }
+};
+
