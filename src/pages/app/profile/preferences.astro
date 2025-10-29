@@ -1,14 +1,6 @@
 ---
 import AppLayout from "@/layouts/AppLayout.astro";
 import DietaryPreferencesView from "@/components/profile/DietaryPreferencesView.tsx";
-
-// Check authentication
-const supabase = Astro.locals.supabase;
-const { data: { user } } = await supabase.auth.getUser();
-
-if (!user) {
-  return Astro.redirect('/');
-}
 ---
 
 <AppLayout title="Dietary Preferences">

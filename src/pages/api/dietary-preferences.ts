@@ -146,23 +146,6 @@ export const GET: APIRoute = async ({ locals }) => {
  */
 export const PUT: APIRoute = async ({ request, locals }) => {
   try {
-    // Verify user authentication
-    const { data: { user }, error: authError } = await locals.supabase.auth.getUser();
-
-    if (authError || !user) {
-      const errorResponse: ErrorResponseDTO = {
-        error: {
-          message: 'Authentication required',
-          code: 'UNAUTHORIZED'
-        },
-        timestamp: new Date().toISOString()
-      };
-
-      return new Response(JSON.stringify(errorResponse), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
 
     // Parse request body
     let body;
@@ -211,7 +194,7 @@ export const PUT: APIRoute = async ({ request, locals }) => {
 
     // Upsert dietary preferences (create or update)
     const result = await service.upsertDietaryPreferences(
-      user.id,
+      DEFAULT_USER_ID,
       validationResult.data
     );
 
