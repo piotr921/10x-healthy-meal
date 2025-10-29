@@ -151,3 +151,11 @@ export interface DietaryPreferencesDTO {
   updated_at: string;
 }
 
+/**
+ * Dietary Preferences View Model (client-side form state)
+ */
+export interface DietaryPreferencesViewModel {
+  diet_type: DietType;
+  forbidden_ingredients: string[];
+}
+

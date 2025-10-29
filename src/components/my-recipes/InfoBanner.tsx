@@ -30,7 +30,7 @@ const InfoBanner: React.FC = () => {
         <p>Get personalized recipe recommendations by setting your dietary preferences.</p>
       </div>
       <div className="flex items-center">
-        <a href="/app/dietary-preferences">
+        <a href="/app/profile/preferences">
           <Button variant="outline" size="sm" className="mr-4">
             Set Preferences
           </Button>
