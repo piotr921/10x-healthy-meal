@@ -4,7 +4,7 @@ import { RecipeService } from '../../../lib/services/recipe.service';
 import { isValidUUID } from '../../../lib/validation/uuid.validation';
 import { UpdateRecipeCommandSchema, formatValidationErrors } from '../../../lib/validation/recipe.validation';
 import { DEFAULT_USER_ID } from '../../../db/supabase.client';
-import type { ErrorResponseDTO, RecipeDTO, UpdateRecipeCommand } from '../../../types';
+import type { ErrorResponseDTO, RecipeDTO, UpdateRecipeCommand, SuccessResponseDTO } from '../../../types';
 
 export const prerender = false;
 
@@ -205,8 +205,9 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
  * Soft deletes an existing recipe for the authenticated user
  *
  * @param params.id - The UUID of the recipe to delete
- * @returns 204 No Content on success
+ * @returns 200 OK with success message on successful deletion
  * @returns 400 if recipe ID is invalid
+ * @returns 401 if user is not authenticated
  * @returns 404 if recipe not found or belongs to another user
  * @returns 500 on server errors
  */
@@ -216,28 +217,57 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
     const supabaseError = validateSupabaseClient(locals);
     if (supabaseError) return supabaseError;
 
+    // Guard clause: Check authentication
+    const session = await locals.supabase.auth.getSession();
+    if (!session.data.session) {
+      console.warn('[DELETE /api/recipes/:id] Unauthorized access attempt', {
+        recipeId: params.id,
+        timestamp: new Date().toISOString()
+      });
+      return createErrorResponse('Authentication required', 401, 'UNAUTHORIZED');
+    }
+
+    const userId = session.data.session.user.id;
+
     // Guard clause: Validate recipe ID and UUID format
     const validation = validateRecipeId(params);
-    if ('error' in validation) return validation.error;
+    if ('error' in validation) {
+      console.warn('[DELETE /api/recipes/:id] Invalid UUID attempt', {
+        recipeId: params.id,
+        userId,
+        timestamp: new Date().toISOString()
+      });
+      return validation.error;
+    }
     const { recipeId } = validation;
 
     // Delete recipe using RecipeService
     const recipeService = new RecipeService(locals.supabase);
-    await recipeService.deleteRecipe(DEFAULT_USER_ID, recipeId);
+    await recipeService.deleteRecipe(userId, recipeId);
 
-    // Happy path: Return 204 No Content
-    return new Response(null, { status: 204 });
+    // Happy path: Return 200 OK with success message
+    const successResponse: SuccessResponseDTO = {
+      message: 'Recipe deleted successfully'
+    };
+    return createJsonResponse(successResponse, 200);
 
   } catch (error) {
     // Handle service-specific errors
     if (error instanceof Error && error.message === 'NOT_FOUND') {
-      console.error(`Recipe not found for deletion - recipeId: ${params.id}, userId: ${DEFAULT_USER_ID}`);
+      console.info('[DELETE /api/recipes/:id] Recipe not found', {
+        recipeId: params.id,
+        timestamp: new Date().toISOString()
+      });
       return createErrorResponse('Recipe not found', 404, 'NOT_FOUND');
     }
 
     // Handle unexpected errors
-    console.error('Error deleting recipe:', error);
-    return createErrorResponse('Internal server error', 500);
+    console.error('[DELETE /api/recipes/:id] Database error:', {
+      recipeId: params.id,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString()
+    });
+    return createErrorResponse('An unexpected error occurred', 500, 'INTERNAL_ERROR');
   }
 };
 
