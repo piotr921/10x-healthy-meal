@@ -33,13 +33,6 @@ export function useDietaryPreferences(): UseDietaryPreferencesReturn {
         },
       });
 
-      if (response.status === 404) {
-        // User hasn't set preferences yet, use defaults
-        setPreferences(DEFAULT_PREFERENCES);
-        setIsLoading(false);
-        return;
-      }
-
       if (response.status === 401) {
         // Redirect to login
         window.location.href = '/';
@@ -50,11 +43,17 @@ export function useDietaryPreferences(): UseDietaryPreferencesReturn {
         throw new Error('Failed to fetch dietary preferences');
       }
 
-      const data: DietaryPreferencesDTO = await response.json();
-      setPreferences({
-        diet_type: data.diet_type,
-        forbidden_ingredients: data.forbidden_ingredients,
-      });
+      const data: DietaryPreferencesDTO | null = await response.json();
+
+      // If null, user hasn't set preferences yet - use defaults
+      if (!data) {
+        setPreferences(DEFAULT_PREFERENCES);
+      } else {
+        setPreferences({
+          diet_type: data.diet_type,
+          forbidden_ingredients: data.forbidden_ingredients,
+        });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred while fetching preferences');
     } finally {

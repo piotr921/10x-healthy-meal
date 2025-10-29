@@ -74,19 +74,14 @@ export const GET: APIRoute = async ({ locals }) => {
     // Fetch the user's dietary preferences
     const preferences = await service.getUserPreferences(DEFAULT_USER_ID);
 
-    // If no preferences found, return 404
+    // If no preferences found, return 200 with null (not an error - user just hasn't set preferences yet)
     if (!preferences) {
-      const errorResponse: ErrorResponseDTO = {
-        error: {
-          message: "Dietary preferences not found",
-          code: "PREFERENCES_NOT_FOUND"
-        },
-        timestamp: new Date().toISOString()
-      };
-
-      return new Response(JSON.stringify(errorResponse), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' }
+      return new Response(JSON.stringify(null), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'private, max-age=60'
+        }
       });
     }
 

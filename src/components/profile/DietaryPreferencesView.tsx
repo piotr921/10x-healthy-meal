@@ -112,6 +112,26 @@ export default function DietaryPreferencesView() {
 
   if (!preferences) return null;
 
+  // Check if user has never saved preferences (all values are defaults)
+  const hasNeverSetPreferences =
+      {/* Info Message for first-time users */}
+      {hasNeverSetPreferences && !saveSuccess && (
+        <div
+          className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-md"
+          role="status"
+          aria-live="polite"
+        >
+          <p className="font-semibold mb-1">Welcome! Set your dietary preferences</p>
+          <p className="text-sm">
+            Configure your diet type and forbidden ingredients below to help personalize your recipe experience.
+            Don't forget to click "Save Changes" when you're done!
+          </p>
+        </div>
+      )}
+
+    preferences.diet_type === 'none' &&
+    preferences.forbidden_ingredients.length === 0;
+
   return (
     <div className="space-y-6">
       {/* Success Message */}

@@ -35,6 +35,6 @@ export const dietaryPreferencesResponseSchema = z.object({
     z.string().trim().min(1).max(100)
   ),
   version: z.number().int().positive(),
-  created_at: z.string().datetime(),
-  updated_at: z.string().datetime()
+  created_at: z.string(),
+  updated_at: z.string()
 }) satisfies z.ZodType<DietaryPreferencesDTO>;

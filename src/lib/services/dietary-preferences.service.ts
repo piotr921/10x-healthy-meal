@@ -70,6 +70,7 @@ export class DietaryPreferencesService {
 
   async getUserPreferences(userId: string): Promise<DietaryPreferencesDTO | null> {
     // Fetch the user's preferences with ingredients
+    // Use maybeSingle() instead of single() to return null when no preferences exist
     const { data: result, error: fetchError } = await this.supabase
       .from('dietary_preferences')
       .select(`
@@ -83,14 +84,15 @@ export class DietaryPreferencesService {
         )
       `)
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
     if (fetchError) {
-      // If an error is not found, return null
-      if (fetchError.code === SupabaseConstants.ERROR_CODES.NOT_FOUND) {
-        return null;
-      }
       throw new Error(`Failed to fetch dietary preferences: ${fetchError.message}`);
+    }
+
+    // Return null if no preferences found
+    if (!result) {
+      return null;
     }
 
     return {
