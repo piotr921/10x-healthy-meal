@@ -1,18 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useDietaryPreferences } from '@/components/hooks/useDietaryPreferences';
 
 const INFO_BANNER_DISMISSED_KEY = 'infoBannerDismissed';
 
 const InfoBanner: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const { preferences, isLoading } = useDietaryPreferences();
 
   useEffect(() => {
-    const isDismissed = localStorage.getItem(INFO_BANNER_DISMISSED_KEY);
-    if (isDismissed !== 'true') {
-      setIsVisible(true);
+    // Don't show banner while loading
+    if (isLoading) {
+      setIsVisible(false);
+      return;
     }
-  }, []);
+
+    // Check if user has manually dismissed the banner
+    const isDismissed = localStorage.getItem(INFO_BANNER_DISMISSED_KEY);
+    if (isDismissed === 'true') {
+      setIsVisible(false);
+      return;
+    }
+
+    // Check if dietary preferences are actually set
+    // Preferences are considered "not set" if:
+    // - preferences are null OR
+    // - diet_type is 'none' AND forbidden_ingredients is empty
+    const preferencesNotSet =
+      !preferences ||
+      (preferences.diet_type === 'none' && preferences.forbidden_ingredients.length === 0);
+
+    // Show banner only if preferences are not set AND not dismissed
+    setIsVisible(preferencesNotSet);
+  }, [isLoading, preferences]);
 
   const handleDismiss = () => {
     localStorage.setItem(INFO_BANNER_DISMISSED_KEY, 'true');
