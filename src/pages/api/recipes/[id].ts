@@ -207,7 +207,6 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
  * @param params.id - The UUID of the recipe to delete
  * @returns 200 OK with success message on successful deletion
  * @returns 400 if recipe ID is invalid
- * @returns 401 if user is not authenticated
  * @returns 404 if recipe not found or belongs to another user
  * @returns 500 on server errors
  */
@@ -217,24 +216,12 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
     const supabaseError = validateSupabaseClient(locals);
     if (supabaseError) return supabaseError;
 
-    // Guard clause: Check authentication
-    const session = await locals.supabase.auth.getSession();
-    if (!session.data.session) {
-      console.warn('[DELETE /api/recipes/:id] Unauthorized access attempt', {
-        recipeId: params.id,
-        timestamp: new Date().toISOString()
-      });
-      return createErrorResponse('Authentication required', 401, 'UNAUTHORIZED');
-    }
-
-    const userId = session.data.session.user.id;
-
     // Guard clause: Validate recipe ID and UUID format
     const validation = validateRecipeId(params);
     if ('error' in validation) {
       console.warn('[DELETE /api/recipes/:id] Invalid UUID attempt', {
         recipeId: params.id,
-        userId,
+        userId: DEFAULT_USER_ID,
         timestamp: new Date().toISOString()
       });
       return validation.error;
@@ -243,7 +230,7 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
 
     // Delete recipe using RecipeService
     const recipeService = new RecipeService(locals.supabase);
-    await recipeService.deleteRecipe(userId, recipeId);
+    await recipeService.deleteRecipe(DEFAULT_USER_ID, recipeId);
 
     // Happy path: Return 200 OK with success message
     const successResponse: SuccessResponseDTO = {
