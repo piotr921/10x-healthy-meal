@@ -55,7 +55,6 @@ The structure is centered around a main dashboard ("My Recipes") that serves as 
     - **Security**: User can only access their own recipes, enforced by the API.
 
 ### 2.5 Edit Recipe View
-
 - **Route:** `/app/recipes/[id]/edit`
 - **Page Component:** `src/pages/app/recipes/[id]/edit.astro`
 - **UI Component:** `src/components/my-recipes/RecipeForm.tsx`
