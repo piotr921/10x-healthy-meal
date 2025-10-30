@@ -6,7 +6,7 @@
  */
 
 import type { ChatCompletionParams } from './openrouter.types';
-import { ModelPresets } from './openrouter.types';
+import { AI_MODEL } from './openrouter.types';
 
 // ============================================
 // OpenRouterService Class
@@ -16,7 +16,6 @@ export class OpenRouterService {
   private static instance: OpenRouterService;
   private readonly apiKey: string;
   private readonly siteUrl: string;
-  private readonly defaultModel: string;
   private readonly apiEndpoint = 'https://openrouter.ai/api/v1/chat/completions';
 
   /**
@@ -27,7 +26,6 @@ export class OpenRouterService {
   private constructor() {
     this.apiKey = import.meta.env.OPENROUTER_API_KEY;
     this.siteUrl = import.meta.env.SITE_URL;
-    this.defaultModel = import.meta.env.OPENROUTER_DEFAULT_MODEL || ModelPresets.DEFAULT;
 
     if (!this.apiKey) {
       throw new Error('OpenRouter API key is not configured in environment variables.');
@@ -75,7 +73,7 @@ export class OpenRouterService {
    */
   private buildRequestPayload(params: ChatCompletionParams): object {
     const payload: any = {
-      model: params.model || this.defaultModel,
+      model: AI_MODEL,
       messages: [
         { role: 'system', content: params.systemMessage },
         { role: 'user', content: params.userMessage },
@@ -93,13 +91,6 @@ export class OpenRouterService {
     return payload;
   }
 
-  /**
-   * Gets the currently configured default model
-   * @returns The default model identifier
-   */
-  public getDefaultModel(): string {
-    return this.defaultModel;
-  }
 
   /**
    * Executes the HTTP request to OpenRouter API
