@@ -1,0 +1,26 @@
+---
+import AppLayout from '../../../layouts/AppLayout.astro';
+import { RecipeDetailView } from '../../../components/recipe-detail/RecipeDetailView';
+import { isValidUUID } from '../../../lib/validation/uuid.validation';
+
+// Extract recipe ID from route params
+const { id } = Astro.params;
+
+// Validate recipe ID exists
+if (!id) {
+  return Astro.redirect('/app/recipes');
+}
+
+// Validate UUID format
+if (!isValidUUID(id)) {
+  return new Response(null, {
+    status: 404,
+    statusText: 'Not Found'
+  });
+}
+---
+
+<AppLayout title="Recipe Details">
+  <RecipeDetailView client:load recipeId={id} />
+</AppLayout>
+

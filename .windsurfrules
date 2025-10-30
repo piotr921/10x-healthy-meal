@@ -1,6 +1,6 @@
-# AI Rules for 10-x-healthy-meal
+# AI Rules for {{project-name}}
 
-HealthyMeal is a web application designed to help users adapt culinary recipes to their personal dietary needs. Powered by AI, the app suggests modifications to user-provided recipes based on saved dietary preferences, making it simple and efficient to create personalized, health-conscious meals. The MVP focuses on user account management, recipe storage, and AI-driven recipe modification, with an emphasis on simplicity and low-cost solutions.
+{{project-description}}
 
 ## Tech Stack
 

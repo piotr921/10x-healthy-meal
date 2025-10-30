@@ -1,0 +1,240 @@
+import type { APIRoute } from 'astro';
+
+import { RecipeService } from '../../lib/services/recipe.service';
+import { CreateRecipeCommandSchema, RecipeListQueryParamsSchema, formatValidationErrors } from '../../lib/validation/recipe.validation';
+import { DEFAULT_USER_ID } from '../../db/supabase.client';
+import type { CreateRecipeCommand, ErrorResponseDTO, RecipeDTO, RecipeListResponseDTO, RecipeListQueryParams } from '../../types';
+
+export const prerender = false;
+
+export const POST: APIRoute = async ({ request, locals }) => {
+  try {
+    // Parse and validate request body
+    const validationResult = await parseAndValidateRequestBody(request);
+    if (!validationResult.success) {
+      return validationResult.errorResponse!;
+    }
+
+    const command: CreateRecipeCommand = validationResult.data!;
+
+    // Create a recipe using service with DEFAULT_USER_ID
+    const recipeService = new RecipeService(locals.supabase);
+    
+    try {
+      const newRecipe: RecipeDTO = await recipeService.createRecipe(DEFAULT_USER_ID, command);
+
+      return new Response(JSON.stringify(newRecipe), {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    } catch (serviceError) {
+      // Handle specific service errors
+      if (serviceError instanceof Error) {
+        if (serviceError.message === 'DUPLICATE_TITLE') {
+          const errorResponse: ErrorResponseDTO = {
+            error: {
+              message: 'A recipe with this title already exists',
+              code: 'DUPLICATE_TITLE'
+            },
+            timestamp: new Date().toISOString()
+          };
+          return new Response(JSON.stringify(errorResponse), {
+            status: 409,
+            headers: { 'Content-Type': 'application/json' }
+          });
+        }
+        
+        // Log the error for debugging
+        console.error('Recipe creation error:', serviceError.message);
+        
+        const errorResponse: ErrorResponseDTO = {
+          error: {
+            message: 'Failed to create recipe',
+            code: 'INTERNAL_ERROR'
+          },
+          timestamp: new Date().toISOString()
+        };
+        return new Response(JSON.stringify(errorResponse), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+      
+      throw serviceError;
+    }
+  } catch (error) {
+    // Handle unexpected errors
+    console.error('Unexpected error in POST /api/recipes:', error);
+    
+    const errorResponse: ErrorResponseDTO = {
+      error: {
+        message: 'An unexpected error occurred',
+        code: 'INTERNAL_ERROR'
+      },
+      timestamp: new Date().toISOString()
+    };
+    return new Response(JSON.stringify(errorResponse), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+};
+
+/**
+ * Parses and validates the request body for recipe creation
+ * @param request - The incoming request object
+ * @returns Promise with a validation result containing either the validated command or error response
+ */
+async function parseAndValidateRequestBody(request: Request): Promise<{
+    success: boolean;
+    data?: CreateRecipeCommand;
+    errorResponse?: Response;
+}> {
+    // Parse and validate request body
+    let requestBody: unknown;
+    try {
+        requestBody = await request.json();
+    } catch (parseError) {
+        const errorResponse: ErrorResponseDTO = {
+            error: {
+                message: 'Invalid JSON in request body',
+                code: 'INVALID_JSON'
+            },
+            timestamp: new Date().toISOString()
+        };
+        return {
+            success: false,
+            errorResponse: new Response(JSON.stringify(errorResponse), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            })
+        };
+    }
+
+    // Validate request body against schema
+    const validationResult = CreateRecipeCommandSchema.safeParse(requestBody);
+    if (!validationResult.success) {
+        const errorResponse: ErrorResponseDTO = {
+            error: {
+                message: 'Validation failed',
+                code: 'VALIDATION_ERROR',
+                details: formatValidationErrors(validationResult.error)
+            },
+            timestamp: new Date().toISOString()
+        };
+        return {
+            success: false,
+            errorResponse: new Response(JSON.stringify(errorResponse), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            })
+        };
+    }
+
+    return {
+        success: true,
+        data: validationResult.data
+    };
+}
+
+export const GET: APIRoute = async ({ url, locals }) => {
+  try {
+    // Extract and validate query parameters
+    const validationResult = parseAndValidateQueryParams(url);
+    if (!validationResult.success) {
+      return validationResult.errorResponse!;
+    }
+
+    const queryParams: RecipeListQueryParams = validationResult.data!;
+
+    // Get recipes using a service with DEFAULT_USER_ID
+    const recipeService = new RecipeService(locals.supabase);
+
+    try {
+      const result: RecipeListResponseDTO = await recipeService.getUserRecipes(queryParams, DEFAULT_USER_ID);
+
+      return new Response(JSON.stringify(result), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    } catch (serviceError) {
+      // Handle service errors
+      if (serviceError instanceof Error) {
+        // Log the error for debugging
+        console.error('Recipe fetch error:', serviceError.message);
+
+        const errorResponse: ErrorResponseDTO = {
+          error: {
+            message: 'Failed to fetch recipes',
+            code: 'INTERNAL_ERROR'
+          },
+          timestamp: new Date().toISOString()
+        };
+        return new Response(JSON.stringify(errorResponse), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+
+      throw serviceError;
+    }
+  } catch (error) {
+    // Handle unexpected errors
+    console.error('Unexpected error in GET /api/recipes:', error);
+
+    const errorResponse: ErrorResponseDTO = {
+      error: {
+        message: 'An unexpected error occurred',
+        code: 'INTERNAL_ERROR'
+      },
+      timestamp: new Date().toISOString()
+    };
+    return new Response(JSON.stringify(errorResponse), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+};
+
+/**
+ * Parses and validates query parameters for recipe listing
+ * @param url - The request URL object
+ * @returns Validation result containing either the validated params or error response
+ */
+function parseAndValidateQueryParams(url: URL): {
+  success: boolean;
+  data?: RecipeListQueryParams;
+  errorResponse?: Response;
+} {
+  // Extract query parameters
+  const rawParams = {
+    page: url.searchParams.get('page') || undefined,
+    limit: url.searchParams.get('limit') || undefined,
+    search: url.searchParams.get('search') || undefined,
+  };
+
+  // Validate query parameters against schema
+  const validationResult = RecipeListQueryParamsSchema.safeParse(rawParams);
+  if (!validationResult.success) {
+    const errorResponse: ErrorResponseDTO = {
+      error: {
+        message: 'Invalid query parameters',
+        code: 'VALIDATION_ERROR',
+        details: formatValidationErrors(validationResult.error)
+      },
+      timestamp: new Date().toISOString()
+    };
+    return {
+      success: false,
+      errorResponse: new Response(JSON.stringify(errorResponse), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    };
+  }
+
+  return {
+    success: true,
+    data: validationResult.data
+  };
+}
