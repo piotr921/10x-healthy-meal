@@ -191,7 +191,7 @@ The API exposes the following main resources mapped to database entities:
 
 #### Update Recipe
 - **HTTP Method:** PUT
-- **URL Path:** `/api/recipes/{id}`
+- **URL Path:** `/api/recipes/{id}/edit`
 - **Description:** Update an existing recipe
 - **Authentication:** Required
 - **Query Parameters:** None

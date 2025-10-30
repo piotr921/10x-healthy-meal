@@ -54,7 +54,21 @@ The structure is centered around a main dashboard ("My Recipes") that serves as 
     - **Accessibility**: Proper heading structure. All actions are keyboard-accessible. Modals trap focus.
     - **Security**: User can only access their own recipes, enforced by the API.
 
-### 2.5. Recipe Creation Page
+### 2.5 Edit Recipe View
+
+- **Route:** `/app/recipes/[id]/edit`
+- **Page Component:** `src/pages/app/recipes/[id]/edit.astro`
+- **UI Component:** `src/components/my-recipes/RecipeForm.tsx`
+- **Description:** A form for editing an existing recipe, pre-filled with the recipe's current data.
+- **Features:**
+    - Fetches recipe data from `GET /api/recipes/{id}` to pre-fill the form.
+    - Input field for the recipe title.
+    - Text area for the recipe content.
+    - A "Save Changes" button that submits the form to `PUT /api/recipes/{id}`.
+    - Handles loading and error states.
+    - Redirects to the recipe detail view (`/app/recipes/{id}`) on successful update.
+
+### 2.6. Recipe Creation Page
 - **View Path**: `/app/recipes/create`
 - **Main Purpose**: To allow users to create a new recipe by pasting its content.
 - **Key Information**: Form with fields for title and content.
@@ -64,7 +78,7 @@ The structure is centered around a main dashboard ("My Recipes") that serves as 
     - **Accessibility**: `aria-invalid` on fields with errors. `aria-describedby` links fields to error messages.
     - **Security**: Input is sanitized on the backend to prevent XSS. Zod validation on the server is the source of truth.
 
-### 2.6. Dietary Preferences Page
+### 2.7. Dietary Preferences Page
 - **View Path**: `/app/profile/preferences`
 - **Main Purpose**: To allow users to define and save their dietary preferences.
 - **Key Information**: Form to select a diet type and manage a list of forbidden ingredients.

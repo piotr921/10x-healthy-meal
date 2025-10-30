@@ -141,6 +141,14 @@ Many individuals find it challenging and time-consuming to adapt existing online
     - A confirmation prompt appears before permanent deletion.
     - Upon confirmation, the recipe is removed from my account and the recipe list.
 
+- ID: `US-014`
+- Title: Edit a Saved Recipe
+- Description: As a user, I want to be able to manually edit a recipe.
+- Acceptance Criteria:
+    - There is an "Edit" button on the recipe list or detail view.
+    - A confirmation prompt appears before saving changes.
+    - Upon confirmation, the recipe is persisted.
+
 ## 6. Success Metrics
 - `Adoption of Profile Feature`: 90% of registered users have completed the dietary preferences section in their profile.
     - `Measurement`: "Completed" is defined as a user saving their preferences form at least once, even if no specific restrictions are selected. This will be tracked via an event triggered on form save.
