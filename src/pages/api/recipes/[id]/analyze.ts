@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { RecipeService } from '@/lib/services/recipe.service';
 import { DietaryPreferencesService } from '@/lib/services/dietary-preferences.service';
 import { OpenRouterService } from '@/lib/services/openrouter.service';
+import { DEFAULT_USER_ID } from '@/db/supabase.client';
 import type { RecipeAnalysisResponseDTO } from '@/types';
 import type { ResponseFormat } from '@/lib/services/openrouter.types';
 
@@ -47,29 +48,13 @@ export const POST: APIRoute = async ({ params, locals }) => {
       );
     }
 
-    // Check authentication
-    const supabase = locals.supabase;
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({
-          error: {
-            message: 'Unauthorized',
-            code: 'UNAUTHORIZED'
-          },
-          timestamp: new Date().toISOString()
-        }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
     // Initialize services
+    const supabase = locals.supabase;
     const recipeService = new RecipeService(supabase);
     const dietaryPreferencesService = new DietaryPreferencesService(supabase);
 
     // Fetch recipe and verify ownership
-    const recipe = await recipeService.getRecipeById(recipeId, user.id);
+    const recipe = await recipeService.getRecipeById(DEFAULT_USER_ID, recipeId);
     if (!recipe) {
       return new Response(
         JSON.stringify({
@@ -84,7 +69,7 @@ export const POST: APIRoute = async ({ params, locals }) => {
     }
 
     // Fetch dietary preferences
-    const preferences = await dietaryPreferencesService.getUserPreferences(user.id);
+    const preferences = await dietaryPreferencesService.getUserPreferences(DEFAULT_USER_ID);
     if (!preferences) {
       return new Response(
         JSON.stringify({
