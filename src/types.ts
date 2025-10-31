@@ -159,3 +159,71 @@ export interface DietaryPreferencesViewModel {
   forbidden_ingredients: string[];
 }
 
+// ============================================
+// Recipe Analysis Types
+// ============================================
+
+/**
+ * Response from AI recipe analysis endpoint
+ */
+export interface RecipeAnalysisResponseDTO {
+  original: {
+    title: string;
+    content: string;
+  };
+  modified: {
+    title: string;
+    content: string;
+  };
+  modifications_summary: string;
+}
+
+/**
+ * Props for AI Analysis Modal component
+ */
+export interface AIAnalysisModalProps {
+  isOpen: boolean;
+  isAnalyzing: boolean;
+  analysisResult: RecipeAnalysisResponseDTO | null;
+  error: string | null;
+  onAccept: () => Promise<void>;
+  onCancel: () => void;
+}
+
+/**
+ * Props for RecipeActions component
+ */
+export interface RecipeActionsProps {
+  onEdit: () => void;
+  onAnalyze: () => void;
+  onDelete: () => void;
+}
+
+/**
+ * Props for RecipeDetailView component
+ */
+export interface RecipeDetailViewProps {
+  recipeId: string;
+}
+
+/**
+ * Props for RecipeDetailContent component
+ */
+export interface RecipeDetailContentProps {
+  recipe: RecipeDTO;
+  onEdit: () => void;
+  onDelete: () => Promise<void>;
+  onAnalyze: () => void;
+}
+
+/**
+ * Props for ConfirmDeleteModal component
+ */
+export interface ConfirmDeleteModalProps {
+  isOpen: boolean;
+  recipeTitle: string;
+  isDeleting: boolean;
+  onConfirm: () => Promise<void>;
+  onCancel: () => void;
+}
+

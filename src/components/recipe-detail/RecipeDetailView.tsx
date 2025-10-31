@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { useRecipeDetail } from '../hooks/useRecipeDetail';
 import { LoadingState } from './LoadingState';
 import { ErrorState } from './ErrorState';
 import { RecipeDetailContent } from './RecipeDetailContent';
-import type { RecipeDetailViewProps } from '../../types';
+import { AIAnalysisModal } from './AIAnalysisModal';
+import type { RecipeDetailViewProps, RecipeAnalysisResponseDTO, UpdateRecipeCommand } from '../../types';
 
 /**
  * RecipeDetailView is the main container component for the recipe detail page
@@ -11,15 +13,88 @@ import type { RecipeDetailViewProps } from '../../types';
 export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
   const { recipe, isLoading, error, deleteRecipe, refetch } = useRecipeDetail(recipeId);
 
+  // AI Analysis state
+  const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<RecipeAnalysisResponseDTO | null>(null);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
+
   // Handle edit navigation
   const handleEdit = () => {
     window.location.href = `/app/recipes/${recipeId}/edit`;
   };
 
-  // Handle AI analysis (future implementation)
-  const handleAnalyze = () => {
-    // TODO: Implement AI analysis modal
-    console.log('AI analysis not yet implemented');
+  // Handle AI analysis
+  const handleAnalyze = async () => {
+    setIsAnalysisModalOpen(true);
+    setIsAnalyzing(true);
+    setAnalysisError(null);
+    setAnalysisResult(null);
+
+    try {
+      const response = await fetch(`/api/recipes/${recipeId}/analyze`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data: RecipeAnalysisResponseDTO = await response.json();
+        setAnalysisResult(data);
+        setAnalysisError(null);
+      } else {
+        const errorData = await response.json().catch(() => ({ error: { message: 'Failed to analyze recipe' } }));
+        setAnalysisError(errorData.error?.message || 'Failed to analyze recipe');
+        setAnalysisResult(null);
+      }
+    } catch (err) {
+      console.error('Error analyzing recipe:', err);
+      setAnalysisError('Failed to analyze recipe. Please check your connection.');
+      setAnalysisResult(null);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  // Handle accepting AI modifications
+  const handleAcceptModifications = async () => {
+    if (!analysisResult) return;
+
+    try {
+      const updateCommand: UpdateRecipeCommand = {
+        title: analysisResult.modified.title,
+        content: analysisResult.modified.content
+      };
+
+      const response = await fetch(`/api/recipes/${recipeId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updateCommand)
+      });
+
+      if (response.ok) {
+        // Close modal and refresh recipe data
+        setIsAnalysisModalOpen(false);
+        setAnalysisResult(null);
+        await refetch();
+      } else {
+        const errorData = await response.json().catch(() => ({ error: { message: 'Failed to save modifications' } }));
+        setAnalysisError(errorData.error?.message || 'Failed to save modifications');
+      }
+    } catch (err) {
+      console.error('Error saving modifications:', err);
+      setAnalysisError('Failed to save modifications. Please try again.');
+    }
+  };
+
+  // Handle canceling/closing the analysis modal
+  const handleCancelAnalysis = () => {
+    setIsAnalysisModalOpen(false);
+    setAnalysisResult(null);
+    setAnalysisError(null);
   };
 
   // Show loading state during initial fetch
@@ -50,72 +125,23 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
 
   // Show recipe content
   return (
-    <RecipeDetailContent
-      recipe={recipe}
-      onEdit={handleEdit}
-      onDelete={deleteRecipe}
-      onAnalyze={handleAnalyze}
-    />
-  );
-}
-import { AlertTriangle } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '../ui/dialog';
-import { Button } from '../ui/button';
-import type { ConfirmDeleteModalProps } from '../../types';
+    <>
+      <RecipeDetailContent
+        recipe={recipe}
+        onEdit={handleEdit}
+        onDelete={deleteRecipe}
+        onAnalyze={handleAnalyze}
+      />
 
-/**
- * ConfirmDeleteModal component displays a confirmation dialog before deleting a recipe
- * Uses Shadcn Dialog component with focus trapping and accessibility features
- */
-export function ConfirmDeleteModal({
-  isOpen,
-  recipeTitle,
-  isDeleting,
-  onConfirm,
-  onCancel
-}: ConfirmDeleteModalProps) {
-  return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <div className="mb-4 flex justify-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
-              <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
-            </div>
-          </div>
-          <DialogTitle className="text-center">Delete Recipe</DialogTitle>
-          <DialogDescription className="text-center">
-            Are you sure you want to delete <span className="font-semibold">"{recipeTitle}"</span>?
-            This action cannot be undone.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter className="sm:justify-center">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancel}
-            disabled={isDeleting}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={onConfirm}
-            disabled={isDeleting}
-          >
-            {isDeleting ? 'Deleting...' : 'Delete Recipe'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      <AIAnalysisModal
+        isOpen={isAnalysisModalOpen}
+        isAnalyzing={isAnalyzing}
+        analysisResult={analysisResult}
+        error={analysisError}
+        onAccept={handleAcceptModifications}
+        onCancel={handleCancelAnalysis}
+      />
+    </>
   );
 }
 
