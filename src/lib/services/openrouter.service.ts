@@ -16,7 +16,7 @@ export class OpenRouterService {
   private static instance: OpenRouterService;
   private readonly apiKey: string;
   private readonly siteUrl: string;
-  private readonly apiEndpoint = 'https://openrouter.ai/api/v1/';
+  private readonly apiEndpoint = 'https://openrouter.ai/api/v1/chat/completions';
 
   /**
    * Private constructor to enforce singleton pattern
