@@ -45,7 +45,15 @@ export function RecipeDetailView({ recipeId }: RecipeDetailViewProps) {
         setAnalysisError(null);
       } else {
         const errorData = await response.json().catch(() => ({ error: { message: 'Failed to analyze recipe' } }));
-        setAnalysisError(errorData.error?.message || 'Failed to analyze recipe');
+        const errorMessage = errorData.error?.message || 'Failed to analyze recipe';
+        const errorCode = errorData.error?.code;
+
+        // Add helpful link for preferences not set error
+        if (errorCode === 'PREFERENCES_NOT_SET') {
+          setAnalysisError(errorMessage);
+        } else {
+          setAnalysisError(errorMessage);
+        }
         setAnalysisResult(null);
       }
     } catch (err) {

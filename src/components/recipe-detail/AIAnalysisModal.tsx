@@ -55,9 +55,18 @@ export function AIAnalysisModal({
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20 mb-4">
               <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
             </div>
-            <p className="text-sm text-red-600 dark:text-red-400 text-center">
+            <p className="text-sm text-red-600 dark:text-red-400 text-center mb-4">
               {error}
             </p>
+            {error.includes('dietary preferences') && (
+              <Button
+                variant="outline"
+                onClick={() => window.location.href = '/app/profile/preferences'}
+                className="mt-2"
+              >
+                Go to Preferences
+              </Button>
+            )}
           </div>
         )}
 

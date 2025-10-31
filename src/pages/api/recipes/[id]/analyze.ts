@@ -74,7 +74,7 @@ export const POST: APIRoute = async ({ params, locals }) => {
       return new Response(
         JSON.stringify({
           error: {
-            message: 'Dietary preferences not set. Please set your dietary preferences before analyzing recipes.',
+            message: 'Please set your dietary preferences before analyzing recipes. Visit the Profile Preferences page to configure your dietary needs.',
             code: 'PREFERENCES_NOT_SET'
           },
           timestamp: new Date().toISOString()
@@ -174,6 +174,33 @@ Please provide:
 
     // Handle specific error types
     if (error instanceof Error) {
+      // Check for specific error patterns
+      if (error.message.includes('OpenRouter API error')) {
+        return new Response(
+          JSON.stringify({
+            error: {
+              message: 'AI service is temporarily unavailable. Please try again later.',
+              code: 'AI_SERVICE_ERROR'
+            },
+            timestamp: new Date().toISOString()
+          }),
+          { status: 503, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+
+      if (error.message.includes('Network error')) {
+        return new Response(
+          JSON.stringify({
+            error: {
+              message: 'Unable to connect to AI service. Please check your internet connection.',
+              code: 'NETWORK_ERROR'
+            },
+            timestamp: new Date().toISOString()
+          }),
+          { status: 503, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+
       return new Response(
         JSON.stringify({
           error: {
@@ -190,7 +217,7 @@ Please provide:
     return new Response(
       JSON.stringify({
         error: {
-          message: 'An unexpected error occurred',
+          message: 'An unexpected error occurred during recipe analysis',
           code: 'INTERNAL_ERROR'
         },
         timestamp: new Date().toISOString()
