@@ -1,5 +1,8 @@
 ---
-// No imports needed - using plain HTML with Tailwind classes
+import { UserNav } from '@/components/auth/UserNav';
+
+// TODO: Replace with actual session check in backend phase
+const isLoggedIn = false;
 ---
 
 <header class="border-b bg-white shadow-sm">
@@ -9,23 +12,18 @@
         <a href="/" class="text-2xl font-bold text-primary hover:opacity-80 transition-opacity">
           HealthyMeal
         </a>
-        <div class="hidden md:flex items-center gap-6">
-          <a href="/app/recipes" class="text-sm font-medium hover:text-primary transition-colors">
-            My Recipes
-          </a>
-          <a href="/app/profile/preferences" class="text-sm font-medium hover:text-primary transition-colors">
-            Dietary Preferences
-          </a>
-        </div>
+        {isLoggedIn && (
+          <div class="hidden md:flex items-center gap-6">
+            <a href="/app/recipes" class="text-sm font-medium hover:text-primary transition-colors">
+              My Recipes
+            </a>
+            <a href="/app/profile/preferences" class="text-sm font-medium hover:text-primary transition-colors">
+              Dietary Preferences
+            </a>
+          </div>
+        )}
       </div>
-      <div class="flex items-center gap-4">
-        <a
-          href="/api/auth/signout"
-          class="inline-flex items-center justify-center rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 transition-colors"
-        >
-          Sign Out
-        </a>
-      </div>
+      <UserNav isLoggedIn={isLoggedIn} client:load />
     </nav>
   </div>
 </header>
