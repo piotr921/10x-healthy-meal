@@ -12,11 +12,23 @@ export const LoginForm: React.FC = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<Partial<Record<keyof LoginFormData, string>>>({});
+
+  // Check for registration success message
+  React.useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('registered') === 'true') {
+      setSuccessMessage('Account created successfully! You can now sign in with your credentials.');
+      // Clean up the URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setSuccessMessage(null);
     setValidationErrors({});
 
     // Validate form data
@@ -75,6 +87,12 @@ export const LoginForm: React.FC = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-sm">
+      {successMessage && (
+        <div className="bg-primary/10 border border-primary text-primary px-4 py-3 rounded-md text-sm">
+          {successMessage}
+        </div>
+      )}
+
       {error && (
         <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded-md text-sm">
           {error}

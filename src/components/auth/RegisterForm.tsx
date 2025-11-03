@@ -13,14 +13,12 @@ export const RegisterForm: React.FC = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Partial<Record<keyof RegisterFormData, string>>>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setValidationErrors({});
-    setSuccess(false);
 
     // Validate form data
     const result = RegisterSchema.safeParse(formData);
@@ -37,15 +35,36 @@ export const RegisterForm: React.FC = () => {
 
     setIsSubmitting(true);
 
-    // TODO: Implement Supabase sign-up logic
-    // This will be implemented in the next phase
-    console.log('Registration attempt:', formData);
+    try {
+      // Call registration API endpoint
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          confirmPassword: formData.confirmPassword,
+        }),
+      });
 
-    // Placeholder for demonstration
-    setTimeout(() => {
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Handle error response
+        setError(data.error || 'An error occurred during registration. Please try again.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Success - redirect to login page with success message
+      window.location.href = '/auth/login?registered=true';
+    } catch (err) {
+      console.error('Registration error:', err);
+      setError('An unexpected error occurred. Please try again.');
       setIsSubmitting(false);
-      setSuccess(true);
-    }, 1000);
+    }
   };
 
   const handleChange = (field: keyof RegisterFormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,24 +78,6 @@ export const RegisterForm: React.FC = () => {
     }
   };
 
-  if (success) {
-    return (
-      <div className="w-full max-w-sm space-y-6">
-        <div className="bg-primary/10 border border-primary text-primary px-4 py-3 rounded-md">
-          <h3 className="font-medium mb-2">Registration successful!</h3>
-          <p className="text-sm">
-            Please check your email to confirm your account before signing in.
-          </p>
-        </div>
-        <Button
-          onClick={() => window.location.href = '/auth/login'}
-          className="w-full"
-        >
-          Go to Sign In
-        </Button>
-      </div>
-    );
-  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-sm">

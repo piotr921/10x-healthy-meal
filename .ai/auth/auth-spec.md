@@ -22,12 +22,13 @@ New React components will be created under `src/components/auth/`:
 
 -   **`LoginForm.tsx`**: A client-side component containing the form for user login.
     -   **Props**: None.
-    -   **State**: Manages form fields (email, password), submission status (loading), and error messages.
+    -   **State**: Manages form fields (email, password), submission status, success messages, and error messages.
     -   **Responsibilities**:
         -   Renders email and password input fields and a submit button.
         -   Performs client-side validation for input formats.
-        -   Calls the Supabase client to handle the sign-in process.
-        -   Displays error messages returned from the backend (e.g., "Invalid credentials").
+        -   Calls the `/api/auth/login` endpoint to handle the sign-in process.
+        -   Displays success message when redirected from successful registration.
+        -   Displays error messages returned from the API endpoint (e.g., "Invalid credentials").
 -   **`RegisterForm.tsx`**: A client-side component for user registration.
     -   **Props**: None.
     -   **State**: Manages form fields (email, password, confirm password), submission status, and error messages.
@@ -35,8 +36,9 @@ New React components will be created under `src/components/auth/`:
         -   Renders email, password, and password confirmation fields.
         -   Validates that email is valid
         -   Validates that passwords match and meet complexity requirements.
-        -   Calls the Supabase client to handle the sign-up process.
-        -   Displays a success message upon successful registration, prompting the user to check their email for confirmation.
+        -   Calls the `/api/auth/register` endpoint to handle the sign-up process.
+        -   On success, redirects to `/auth/login` with a success message.
+        -   Displays error messages returned from the API endpoint.
 -   **`UserNav.tsx`**: A component to be added to the main header (`src/components/Header.astro`).
     -   **Props**: `isLoggedIn: boolean`.
     -   **Responsibilities**:
@@ -73,15 +75,19 @@ New React components will be created under `src/components/auth/`:
 -   **Registration**:
     1.  User navigates to `/auth/register`.
     2.  The `RegisterForm.tsx` component is rendered.
-    3.  User fills out the form and submits.
-    4.  The component calls `supabase.auth.signUp()`.
-    5.  On success, a message is shown asking the user to confirm their email.
+    3.  User fills out the form (email, password, confirm password) and submits.
+    4.  The component validates the form data client-side and calls the `/api/auth/register` endpoint.
+    5.  The API endpoint calls `supabase.auth.signUp()` to create the user account.
+    6.  On success, the user is redirected to `/auth/login` with a success message.
+    7.  The user can immediately sign in with their new credentials (email confirmation is disabled in local development).
 -   **Login**:
     1.  User navigates to `/auth/login`.
     2.  The `LoginForm.tsx` component is rendered.
-    3.  User enters credentials and submits.
-    4.  The component calls `supabase.auth.signInWithPassword()`.
-    5.  On success, Supabase redirects to the `auth/callback` route, which sets a session cookie. The user is then redirected to the `/app/recipes` page.
+    3.  If redirected from registration, a success message is displayed.
+    4.  User enters credentials and submits.
+    5.  The component calls the `/api/auth/login` endpoint.
+    6.  The API endpoint calls `supabase.auth.signInWithPassword()`.
+    7.  On success, the session is established and the user is redirected to the `/app/recipes` page.
 -   **Logout**:
     1.  User clicks the "Logout" button in `UserNav.tsx`.
     2.  An event handler calls `supabase.auth.signOut()`.
@@ -93,13 +99,43 @@ The backend logic will primarily be handled by Supabase, with API routes in Astr
 
 ### 3.1. API Endpoints
 
--   **`src/pages/api/auth/callback.ts` (replaces `src/pages/auth/callback.astro`)**:
+-   **`src/pages/api/auth/register.ts`**:
+    -   **Method**: `POST`
+    -   **Description**: Handles user registration by creating a new account in Supabase Auth.
+    -   **Request Body**: `{ email: string, password: string, confirmPassword: string }`
+    -   **Validation**: Uses `RegisterSchema` from Zod to validate email format, password strength, and password confirmation match.
+    -   **Logic**:
+        1.  Validates the request body against `RegisterSchema`.
+        2.  Creates Supabase server instance.
+        3.  Calls `supabase.auth.signUp()` with email and password.
+        4.  Maps Supabase errors to user-friendly messages.
+        5.  Returns success response with user ID and email, or error response.
+    -   **Response**:
+        -   Success (201): `{ success: true, message: string, user: { id: string, email: string } }`
+        -   Error (400/500): `{ error: string }`
+        
+-   **`src/pages/api/auth/login.ts`**:
+    -   **Method**: `POST`
+    -   **Description**: Handles user login by authenticating credentials with Supabase Auth.
+    -   **Request Body**: `{ email: string, password: string }`
+    -   **Validation**: Uses `LoginSchema` from Zod.
+    -   **Logic**:
+        1.  Validates the request body.
+        2.  Creates Supabase server instance.
+        3.  Calls `supabase.auth.signInWithPassword()`.
+        4.  Session cookies are automatically set by the Supabase client.
+        5.  Returns success or error response.
+    -   **Response**:
+        -   Success (200): `{ success: true, user: { id: string, email: string } }`
+        -   Error (401/500): `{ error: string }`
+
+-   **`src/pages/auth/callback.astro`**:
     -   **Method**: `GET`
-    -   **Description**: Handles the server-side session creation after a successful Supabase redirect. It exchanges the authorization code for a session and stores it in a cookie.
+    -   **Description**: Handles OAuth callback redirects from Supabase after authentication flows that require server-side code exchange.
     -   **Logic**:
         1.  Receives the `code` from the query parameters.
         2.  Calls `supabase.auth.exchangeCodeForSession(code)`.
-        3.  Sets the session cookie using `Astro.cookies.set()`.
+        3.  Session cookies are automatically set by the Supabase client.
         4.  Redirects the user to a protected page (e.g., `/app/recipes`).
 
 ### 3.2. Data Models
