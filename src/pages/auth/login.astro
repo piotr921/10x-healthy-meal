@@ -1,6 +1,13 @@
 ---
 import Layout from '@/layouts/Layout.astro';
 import { LoginForm } from '@/components/auth/LoginForm';
+
+export const prerender = false;
+
+// Redirect authenticated users to recipes page
+if (Astro.locals.user) {
+  return Astro.redirect('/app/recipes');
+}
 ---
 
 <Layout title="Sign In - HealthyMeal">

@@ -1,6 +1,9 @@
 ---
 import Welcome from "../components/Welcome.astro";
 import Layout from "../layouts/Layout.astro";
+
+// Redirect to login page (also handled by middleware)
+return Astro.redirect('/auth/login');
 ---
 
 <Layout>

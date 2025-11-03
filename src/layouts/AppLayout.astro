@@ -9,6 +9,11 @@ interface Props {
 }
 
 const { title } = Astro.props;
+
+// Redirect to login if user is not authenticated
+if (!Astro.locals.user) {
+  return Astro.redirect('/auth/login');
+}
 ---
 
 <!doctype html>

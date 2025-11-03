@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '../../db/supabase.client.ts';
 import type {
   CreateDietaryPreferencesCommand,
   UpdateDietaryPreferencesCommand,

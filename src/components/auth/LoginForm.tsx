@@ -34,15 +34,32 @@ export const LoginForm: React.FC = () => {
 
     setIsSubmitting(true);
 
-    // TODO: Implement Supabase sign-in logic
-    // This will be implemented in the next phase
-    console.log('Login attempt:', formData);
+    try {
+      // Call login API endpoint
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
 
-    // Placeholder for demonstration
-    setTimeout(() => {
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Handle error response
+        setError(data.error || 'An error occurred during login. Please try again.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Success - redirect to recipes page
+      window.location.href = '/app/recipes';
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('An unexpected error occurred. Please try again.');
       setIsSubmitting(false);
-      setError('Authentication not yet implemented');
-    }, 1000);
+    }
   };
 
   const handleChange = (field: keyof LoginFormData) => (e: React.ChangeEvent<HTMLInputElement>) => {

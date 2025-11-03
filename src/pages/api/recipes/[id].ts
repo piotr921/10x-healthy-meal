@@ -3,7 +3,6 @@ import type { APIRoute } from 'astro';
 import { RecipeService } from '../../../lib/services/recipe.service';
 import { isValidUUID } from '../../../lib/validation/uuid.validation';
 import { UpdateRecipeCommandSchema, formatValidationErrors } from '../../../lib/validation/recipe.validation';
-import { DEFAULT_USER_ID } from '../../../db/supabase.client';
 import type { ErrorResponseDTO, RecipeDTO, UpdateRecipeCommand, SuccessResponseDTO } from '../../../types';
 
 export const prerender = false;
@@ -94,6 +93,11 @@ function validateRecipeId(params: { id?: string }): { recipeId: string } | { err
  */
 export const GET: APIRoute = async ({ params, locals }) => {
   try {
+    // Guard clause: Check authentication
+    if (!locals.user) {
+      return createErrorResponse('Unauthorized', 401, 'UNAUTHORIZED');
+    }
+
     // Guard clause: Validate Supabase client availability
     const supabaseError = validateSupabaseClient(locals);
     if (supabaseError) return supabaseError;
@@ -105,7 +109,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
 
     // Fetch recipe using RecipeService
     const recipeService = new RecipeService(locals.supabase);
-    const recipe: RecipeDTO | null = await recipeService.getRecipeById(DEFAULT_USER_ID, recipeId);
+    const recipe: RecipeDTO | null = await recipeService.getRecipeById(locals.user.id, recipeId);
 
     // Guard clause: Handle recipe not found
     if (!recipe) {
@@ -136,6 +140,11 @@ export const GET: APIRoute = async ({ params, locals }) => {
  */
 export const PUT: APIRoute = async ({ params, request, locals }) => {
   try {
+    // Guard clause: Check authentication
+    if (!locals.user) {
+      return createErrorResponse('Unauthorized', 401, 'UNAUTHORIZED');
+    }
+
     // Guard clause: Validate Supabase client availability
     const supabaseError = validateSupabaseClient(locals);
     if (supabaseError) return supabaseError;
@@ -170,7 +179,7 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
     // Update recipe using RecipeService
     const recipeService = new RecipeService(locals.supabase);
     const updatedRecipe: RecipeDTO = await recipeService.updateRecipe(
-      DEFAULT_USER_ID,
+      locals.user.id,
       recipeId,
       validatedCommand
     );
@@ -183,13 +192,13 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
     if (error instanceof Error) {
       // Handle NOT_FOUND error
       if (error.message === 'NOT_FOUND') {
-        console.error(`Recipe not found for update - recipeId: ${params.id}, userId: ${DEFAULT_USER_ID}`);
+        console.error(`Recipe not found for update - recipeId: ${params.id}, userId: ${locals.user?.id}`);
         return createErrorResponse('Recipe not found', 404, 'NOT_FOUND');
       }
 
       // Handle DUPLICATE_TITLE error
       if (error.message === 'DUPLICATE_TITLE') {
-        console.error(`Duplicate recipe title attempted - userId: ${DEFAULT_USER_ID}, recipeId: ${params.id}`);
+        console.error(`Duplicate recipe title attempted - userId: ${locals.user?.id}, recipeId: ${params.id}`);
         return createErrorResponse('Recipe with this title already exists', 409, 'DUPLICATE_TITLE');
       }
     }
@@ -212,6 +221,11 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
  */
 export const DELETE: APIRoute = async ({ params, locals }) => {
   try {
+    // Guard clause: Check authentication
+    if (!locals.user) {
+      return createErrorResponse('Unauthorized', 401, 'UNAUTHORIZED');
+    }
+
     // Guard clause: Validate Supabase client availability
     const supabaseError = validateSupabaseClient(locals);
     if (supabaseError) return supabaseError;
@@ -221,7 +235,7 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
     if ('error' in validation) {
       console.warn('[DELETE /api/recipes/:id] Invalid UUID attempt', {
         recipeId: params.id,
-        userId: DEFAULT_USER_ID,
+        userId: locals.user.id,
         timestamp: new Date().toISOString()
       });
       return validation.error;
@@ -230,7 +244,7 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
 
     // Delete recipe using RecipeService
     const recipeService = new RecipeService(locals.supabase);
-    await recipeService.deleteRecipe(DEFAULT_USER_ID, recipeId);
+    await recipeService.deleteRecipe(locals.user.id, recipeId);
 
     // Happy path: Return 200 OK with success message
     const successResponse: SuccessResponseDTO = {

@@ -1,8 +1,8 @@
 ---
 import { UserNav } from '@/components/auth/UserNav';
 
-// TODO: Replace with actual session check in backend phase
-const isLoggedIn = false;
+// Check if user is authenticated
+const isLoggedIn = !!Astro.locals.user;
 ---
 
 <header class="border-b bg-white shadow-sm">

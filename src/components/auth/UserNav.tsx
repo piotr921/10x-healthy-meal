@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 
 interface UserNavProps {
@@ -6,6 +6,31 @@ interface UserNavProps {
 }
 
 export const UserNav: React.FC<UserNavProps> = ({ isLoggedIn }) => {
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        // Redirect to login page after successful logout
+        window.location.href = '/auth/login';
+      } else {
+        console.error('Logout failed');
+        setIsLoggingOut(false);
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      setIsLoggingOut(false);
+    }
+  };
+
   if (isLoggedIn) {
     return (
       <div className="flex items-center gap-4">
@@ -18,13 +43,10 @@ export const UserNav: React.FC<UserNavProps> = ({ isLoggedIn }) => {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => {
-            // TODO: Implement Supabase sign-out logic
-            // This will be implemented in the next phase
-            console.log('Logout clicked');
-          }}
+          onClick={handleLogout}
+          disabled={isLoggingOut}
         >
-          Logout
+          {isLoggingOut ? 'Logging out...' : 'Logout'}
         </Button>
       </div>
     );
