@@ -104,10 +104,10 @@ export const LoginForm: React.FC = () => {
 
       <div className="flex items-center justify-between">
         <a
-          href="/auth/forgot-password"
+          href="/auth/restore-password"
           className="text-sm text-primary hover:underline"
         >
-          Forgot password?
+          Restore password?
         </a>
       </div>
 

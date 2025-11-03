@@ -9,7 +9,7 @@ This document summarizes the user interface components and pages created for the
 **File:** `src/lib/validation/auth.validation.ts`
 - `LoginSchema` - Validates email and password for login
 - `RegisterSchema` - Validates email, password, and password confirmation for registration
-- `ForgotPasswordSchema` - Validates email for password reset
+- `RestorePasswordSchema` - Validates email for password reset
 - `UpdatePasswordSchema` - Validates new password and confirmation
 
 All schemas include appropriate error messages as specified in the requirements.
@@ -36,8 +36,8 @@ All schemas include appropriate error messages as specified in the requirements.
 - Link to login page
 - Placeholder for Supabase integration (to be implemented in backend phase)
 
-#### ForgotPasswordForm Component
-**File:** `src/components/auth/ForgotPasswordForm.tsx`
+#### RestorePasswordForm Component
+**File:** `src/components/auth/RestorePasswordForm.tsx`
 - Email input field
 - Client-side validation
 - Success message after submission
@@ -76,11 +76,12 @@ All schemas include appropriate error messages as specified in the requirements.
 - Renders RegisterForm component
 - Consistent styling with existing pages
 
-#### Forgot Password Page
-**File:** `src/pages/auth/forgot-password.astro`
+#### Restore Password Page
+**File:** `src/pages/auth/restore-password.astro`
 - Centered layout with HealthyMeal branding
-- Renders ForgotPasswordForm component
+- Renders RestorePasswordForm component
 - Consistent styling with existing pages
+- Page title: "Restore Password"
 
 #### Update Password Page
 **File:** `src/pages/auth/update-password.astro`
@@ -136,8 +137,8 @@ All components follow the existing HealthyMeal design system:
 5. User will be redirected to `/app/recipes` after successful login
 
 ### Password Recovery Flow
-1. User clicks "Forgot password?" on login page
-2. Navigates to `/auth/forgot-password`
+1. User clicks "Restore password?" on login page
+2. Navigates to `/auth/restore-password`
 3. Enters email address
 4. Success message displayed (backend integration pending)
 5. User receives password reset email (Supabase)
@@ -159,7 +160,7 @@ The following items are marked as TODO and need to be implemented in the backend
 2. **Sign-up Logic**: Implement `supabase.auth.signUp()` in RegisterForm
 3. **Sign-in Logic**: Implement `supabase.auth.signInWithPassword()` in LoginForm
 4. **Sign-out Logic**: Implement `supabase.auth.signOut()` in UserNav
-5. **Password Reset**: Implement `supabase.auth.resetPasswordForEmail()` in ForgotPasswordForm
+5. **Password Reset**: Implement `supabase.auth.resetPasswordForEmail()` in RestorePasswordForm
 6. **Password Update**: Implement `supabase.auth.updateUser()` in UpdatePasswordForm
 7. **Session Management**: Replace placeholder `isLoggedIn` in Header with actual session check
 8. **Callback Handler**: Implement OAuth callback logic in `auth/callback.astro`

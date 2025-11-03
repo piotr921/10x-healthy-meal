@@ -3,16 +3,16 @@ import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ForgotPasswordSchema, type ForgotPasswordFormData } from '@/lib/validation/auth.validation';
+import { RestorePasswordSchema, type RestorePasswordFormData } from '@/lib/validation/auth.validation';
 
-export const ForgotPasswordForm: React.FC = () => {
-  const [formData, setFormData] = useState<ForgotPasswordFormData>({
+export const RestorePasswordForm: React.FC = () => {
+  const [formData, setFormData] = useState<RestorePasswordFormData>({
     email: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<Partial<Record<keyof ForgotPasswordFormData, string>>>({});
+  const [validationErrors, setValidationErrors] = useState<Partial<Record<keyof RestorePasswordFormData, string>>>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,12 +21,12 @@ export const ForgotPasswordForm: React.FC = () => {
     setSuccess(false);
 
     // Validate form data
-    const result = ForgotPasswordSchema.safeParse(formData);
+    const result = RestorePasswordSchema.safeParse(formData);
     if (!result.success) {
-      const errors: Partial<Record<keyof ForgotPasswordFormData, string>> = {};
+      const errors: Partial<Record<keyof RestorePasswordFormData, string>> = {};
       result.error.errors.forEach((err) => {
         if (err.path[0]) {
-          errors[err.path[0] as keyof ForgotPasswordFormData] = err.message;
+          errors[err.path[0] as keyof RestorePasswordFormData] = err.message;
         }
       });
       setValidationErrors(errors);
