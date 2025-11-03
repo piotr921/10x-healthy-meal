@@ -1,10 +1,9 @@
-import type { SupabaseClient } from '../../db/supabase.client.ts';
+import type { SupabaseClient } from '@/db/supabase.client';
 import type {
   CreateDietaryPreferencesCommand,
   UpdateDietaryPreferencesCommand,
   DietaryPreferencesDTO
 } from '@/types';
-import { SupabaseConstants } from '../constants/supabase.constants';
 
 export class DietaryPreferencesService {
   constructor(private readonly supabase: SupabaseClient) {}
@@ -36,6 +35,10 @@ export class DietaryPreferencesService {
 
     if (txError) {
       throw new Error(`Failed to create dietary preferences: ${txError.message}`);
+    }
+
+    if (!preferences) {
+      throw new Error('Failed to create dietary preferences: No data returned');
     }
 
     // Fetch the created preferences with ingredients
@@ -146,6 +149,10 @@ export class DietaryPreferencesService {
       if (createError) {
         console.error('Error creating dietary preferences:', createError);
         throw new Error(`Failed to create dietary preferences: ${createError.message}`);
+      }
+
+      if (!preferences) {
+        throw new Error('Failed to create dietary preferences: No data returned');
       }
 
       // Fetch the created preferences with ingredients
