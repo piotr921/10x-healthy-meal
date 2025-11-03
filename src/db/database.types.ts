@@ -131,7 +131,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_dietary_preferences: {
+        Args: {
+          p_user_id: string
+          p_diet_type: Database["public"]["Enums"]["diet_type_enum"]
+          p_forbidden_ingredients: string[]
+        }
+        Returns: Database["public"]["Tables"]["dietary_preferences"]["Row"]
+      }
     }
     Enums: {
       diet_type_enum: "vegan" | "vegetarian" | "none"

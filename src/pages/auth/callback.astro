@@ -1,0 +1,32 @@
+---
+import { createSupabaseServerInstance } from '@/db/supabase.client';
+
+export const prerender = false;
+
+const { url, cookies, request } = Astro;
+
+// Get the code from the URL query parameters
+const code = url.searchParams.get('code');
+
+if (code) {
+  const supabase = createSupabaseServerInstance({
+    cookies,
+    headers: request.headers,
+  });
+
+  // Exchange the code for a session
+  const { error } = await supabase.auth.exchangeCodeForSession(code);
+
+  if (error) {
+    console.error('Auth callback error:', error);
+    return Astro.redirect('/auth/login?error=callback_failed');
+  }
+
+  // Redirect to the app after successful authentication
+  return Astro.redirect('/app/recipes');
+}
+
+// If no code, redirect to login
+return Astro.redirect('/auth/login');
+---
+

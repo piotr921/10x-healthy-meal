@@ -1,7 +1,6 @@
 import type { APIRoute } from 'astro';
 import { DietaryPreferencesService } from '@/lib/services/dietary-preferences.service';
 import { createDietaryPreferencesSchema, updateDietaryPreferencesSchema, dietaryPreferencesResponseSchema } from '@/lib/validation/dietary-preferences.validation';
-import { DEFAULT_USER_ID } from '@/db/supabase.client';
 import type { ErrorResponseDTO } from '@/types';
 import { ZodError } from 'zod';
 
@@ -9,6 +8,21 @@ export const prerender = false;
 
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
+    // Check authentication
+    if (!locals.user) {
+      const errorResponse: ErrorResponseDTO = {
+        error: {
+          message: 'Unauthorized',
+          code: 'UNAUTHORIZED'
+        },
+        timestamp: new Date().toISOString()
+      };
+      return new Response(JSON.stringify(errorResponse), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     // Parse and validate request body
     const body = await request.json();
     const validationResult = createDietaryPreferencesSchema.safeParse(body);
@@ -37,7 +51,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     // Process the request
     const result = await service.createDietaryPreferences(
-      DEFAULT_USER_ID,
+      locals.user.id,
       validationResult.data
     );
 
@@ -68,11 +82,26 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
 export const GET: APIRoute = async ({ locals }) => {
   try {
+    // Check authentication
+    if (!locals.user) {
+      const errorResponse: ErrorResponseDTO = {
+        error: {
+          message: 'Unauthorized',
+          code: 'UNAUTHORIZED'
+        },
+        timestamp: new Date().toISOString()
+      };
+      return new Response(JSON.stringify(errorResponse), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     // Create a service instance with Supabase client from context
     const service = new DietaryPreferencesService(locals.supabase);
 
     // Fetch the user's dietary preferences
-    const preferences = await service.getUserPreferences(DEFAULT_USER_ID);
+    const preferences = await service.getUserPreferences(locals.user.id);
 
     // If no preferences found, return 200 with null (not an error - user just hasn't set preferences yet)
     if (!preferences) {
@@ -141,6 +170,20 @@ export const GET: APIRoute = async ({ locals }) => {
  */
 export const PUT: APIRoute = async ({ request, locals }) => {
   try {
+    // Check authentication
+    if (!locals.user) {
+      const errorResponse: ErrorResponseDTO = {
+        error: {
+          message: 'Unauthorized',
+          code: 'UNAUTHORIZED'
+        },
+        timestamp: new Date().toISOString()
+      };
+      return new Response(JSON.stringify(errorResponse), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
 
     // Parse request body
     let body;
@@ -189,7 +232,7 @@ export const PUT: APIRoute = async ({ request, locals }) => {
 
     // Upsert dietary preferences (create or update)
     const result = await service.upsertDietaryPreferences(
-      DEFAULT_USER_ID,
+      locals.user.id,
       validationResult.data
     );
 

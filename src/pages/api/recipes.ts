@@ -2,13 +2,27 @@ import type { APIRoute } from 'astro';
 
 import { RecipeService } from '../../lib/services/recipe.service';
 import { CreateRecipeCommandSchema, RecipeListQueryParamsSchema, formatValidationErrors } from '../../lib/validation/recipe.validation';
-import { DEFAULT_USER_ID } from '../../db/supabase.client';
 import type { CreateRecipeCommand, ErrorResponseDTO, RecipeDTO, RecipeListResponseDTO, RecipeListQueryParams } from '../../types';
 
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
+    // Check authentication
+    if (!locals.user) {
+      const errorResponse: ErrorResponseDTO = {
+        error: {
+          message: 'Unauthorized',
+          code: 'UNAUTHORIZED'
+        },
+        timestamp: new Date().toISOString()
+      };
+      return new Response(JSON.stringify(errorResponse), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     // Parse and validate request body
     const validationResult = await parseAndValidateRequestBody(request);
     if (!validationResult.success) {
@@ -17,11 +31,11 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     const command: CreateRecipeCommand = validationResult.data!;
 
-    // Create a recipe using service with DEFAULT_USER_ID
+    // Create a recipe using service with authenticated user
     const recipeService = new RecipeService(locals.supabase);
     
     try {
-      const newRecipe: RecipeDTO = await recipeService.createRecipe(DEFAULT_USER_ID, command);
+      const newRecipe: RecipeDTO = await recipeService.createRecipe(locals.user.id, command);
 
       return new Response(JSON.stringify(newRecipe), {
         status: 201,
@@ -139,6 +153,21 @@ async function parseAndValidateRequestBody(request: Request): Promise<{
 
 export const GET: APIRoute = async ({ url, locals }) => {
   try {
+    // Check authentication
+    if (!locals.user) {
+      const errorResponse: ErrorResponseDTO = {
+        error: {
+          message: 'Unauthorized',
+          code: 'UNAUTHORIZED'
+        },
+        timestamp: new Date().toISOString()
+      };
+      return new Response(JSON.stringify(errorResponse), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     // Extract and validate query parameters
     const validationResult = parseAndValidateQueryParams(url);
     if (!validationResult.success) {
@@ -147,11 +176,11 @@ export const GET: APIRoute = async ({ url, locals }) => {
 
     const queryParams: RecipeListQueryParams = validationResult.data!;
 
-    // Get recipes using a service with DEFAULT_USER_ID
+    // Get recipes using a service with authenticated user
     const recipeService = new RecipeService(locals.supabase);
 
     try {
-      const result: RecipeListResponseDTO = await recipeService.getUserRecipes(queryParams, DEFAULT_USER_ID);
+      const result: RecipeListResponseDTO = await recipeService.getUserRecipes(queryParams, locals.user.id);
 
       return new Response(JSON.stringify(result), {
         status: 200,

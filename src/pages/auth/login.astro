@@ -1,0 +1,30 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import { LoginForm } from '@/components/auth/LoginForm';
+
+export const prerender = false;
+
+// Redirect authenticated users to recipes page
+if (Astro.locals.user) {
+  return Astro.redirect('/app/recipes');
+}
+---
+
+<Layout title="Sign In - HealthyMeal">
+  <div class="min-h-screen flex items-center justify-center bg-muted/30 px-4 py-12">
+    <div class="w-full max-w-md">
+      <div class="text-center mb-8">
+        <a href="/" class="inline-block">
+          <h1 class="text-4xl font-bold text-primary mb-2">HealthyMeal</h1>
+        </a>
+        <h2 class="text-2xl font-semibold text-foreground mb-2">Welcome back</h2>
+        <p class="text-muted-foreground">Sign in to your account to continue</p>
+      </div>
+
+      <div class="bg-white p-8 rounded-lg border shadow-sm">
+        <LoginForm client:load />
+      </div>
+    </div>
+  </div>
+</Layout>
+
